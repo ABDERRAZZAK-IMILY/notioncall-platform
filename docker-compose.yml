@@ -1,0 +1,48 @@
+services:
+
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: notioncall-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-notioncall}
+      POSTGRES_USER: ${POSTGRES_USER:-notioncall}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-notioncall_dev}
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-notioncall} -d ${POSTGRES_DB:-notioncall}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+
+  redis:
+    image: redis:8-alpine
+    container_name: notioncall-redis
+    restart: unless-stopped
+
+    command: redis-server --appendonly yes
+
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+
+    volumes:
+      - redis_data:/data
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+
+volumes:
+  postgres_data:
+  redis_data:
